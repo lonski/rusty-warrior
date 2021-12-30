@@ -4,6 +4,7 @@ mod map;
 mod map_builder;
 mod spawner;
 mod systems;
+mod turn_state;
 
 mod prelude {
     pub use bracket_lib::prelude::*;
@@ -20,6 +21,7 @@ mod prelude {
     pub use crate::map_builder::*;
     pub use crate::spawner::*;
     pub use crate::systems::*;
+    pub use crate::turn_state::*;
 }
 
 use prelude::*;
@@ -27,7 +29,9 @@ use prelude::*;
 struct State {
     ecs: World,
     resources: Resources,
-    systems: Schedule,
+    input_sytems: Schedule,
+    player_systems: Schedule,
+    monsters_systems: Schedule,
 }
 
 impl State {
@@ -38,6 +42,7 @@ impl State {
         let map_builder = MapBuilder::new(&mut rng);
         resources.insert(map_builder.map);
         resources.insert(Camera::new(map_builder.player_start));
+        resources.insert(TurnState::AwaitingInput);
         spawn_player(&mut ecs, map_builder.player_start);
         map_builder
             .rooms
@@ -48,7 +53,9 @@ impl State {
         Self {
             ecs,
             resources,
-            systems: build_scheduler(),
+            input_sytems: build_input_scheduler(),
+            player_systems: build_player_scheduler(),
+            monsters_systems: build_monster_scheduler(),
         }
     }
 }
@@ -61,7 +68,18 @@ impl GameState for State {
         }
 
         self.resources.insert(ctx.key);
-        self.systems.execute(&mut self.ecs, &mut self.resources);
+        let current_state = *self.resources.get::<TurnState>().unwrap();
+        match current_state {
+            TurnState::AwaitingInput => self
+                .input_sytems
+                .execute(&mut self.ecs, &mut self.resources),
+            TurnState::PlayerTurn => self
+                .player_systems
+                .execute(&mut self.ecs, &mut self.resources),
+            TurnState::MonsterTurn => self
+                .monsters_systems
+                .execute(&mut self.ecs, &mut self.resources),
+        }
         render_draw_buffer(ctx).expect("Render error");
     }
 }
