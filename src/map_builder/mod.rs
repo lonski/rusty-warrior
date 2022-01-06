@@ -1,9 +1,11 @@
 mod celular_automata;
+mod drunkard;
 mod empty;
 mod rooms;
 
 use crate::prelude::*;
 use celular_automata::CellularAutomataArchitect;
+use drunkard::DrunkardsWalkArchitect;
 use empty::EmptyArchitect;
 use rooms::RoomsArchitect;
 
@@ -22,6 +24,16 @@ pub struct MapBuilder {
 }
 
 impl MapBuilder {
+    pub fn new_random(rng: &mut RandomNumberGenerator) -> Self {
+        let mut architect: Box<dyn MapArchitect> = match rng.range(0, 3) {
+            0 => Box::new(DrunkardsWalkArchitect {}),
+            1 => Box::new(RoomsArchitect {}),
+            _ => Box::new(CellularAutomataArchitect {}),
+        };
+        let mut mb = architect.build(rng);
+        mb
+    }
+
     pub fn new_rooms(rng: &mut RandomNumberGenerator) -> Self {
         let mut architect = RoomsArchitect {};
         architect.build(rng)
@@ -34,6 +46,11 @@ impl MapBuilder {
 
     pub fn new_celular_automata(rng: &mut RandomNumberGenerator) -> Self {
         let mut architect = CellularAutomataArchitect {};
+        architect.build(rng)
+    }
+
+    pub fn new_drunkard(rng: &mut RandomNumberGenerator) -> Self {
+        let mut architect = DrunkardsWalkArchitect {};
         architect.build(rng)
     }
 
@@ -144,5 +161,18 @@ impl MapBuilder {
             spawnable_tiles.remove(target_index);
         }
         spawns
+    }
+
+    fn fill_border_walls(&mut self) {
+        let size = self.map.tiles.len();
+        for (idx, tile) in self.map.tiles.iter_mut().enumerate() {
+            if idx <= SCREEN_WIDTH as usize
+                || idx > size - SCREEN_WIDTH as usize
+                || idx % SCREEN_WIDTH as usize == 0
+                || idx % SCREEN_WIDTH as usize == SCREEN_WIDTH as usize - 1
+            {
+                *tile = TileType::Wall;
+            }
+        }
     }
 }
