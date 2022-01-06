@@ -1,3 +1,5 @@
+#![allow(clippy::new_ret_no_self)]
+
 mod camera;
 mod components;
 mod map;
@@ -61,6 +63,7 @@ impl State {
         self.resources.insert(map_builder.map);
         self.resources.insert(Camera::new(map_builder.player_start));
         self.resources.insert(TurnState::AwaitingInput);
+        self.resources.insert(map_builder.theme);
     }
 
     fn game_over(&mut self, ctx: &mut BTerm) {

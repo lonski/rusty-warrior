@@ -3,14 +3,20 @@ mod drunkard;
 mod empty;
 mod prefab;
 mod rooms;
+mod themes;
 
 use crate::prelude::*;
 use celular_automata::CellularAutomataArchitect;
 use drunkard::DrunkardsWalkArchitect;
 use empty::EmptyArchitect;
 use rooms::RoomsArchitect;
+use themes::*;
 
 const NUM_ROOMS: usize = 20;
+
+pub trait MapTheme: Sync + Send {
+    fn tile_to_render(&self, tile_type: TileType) -> FontCharType;
+}
 
 trait MapArchitect {
     fn build(&mut self, rng: &mut RandomNumberGenerator) -> MapBuilder;
@@ -22,6 +28,7 @@ pub struct MapBuilder {
     pub player_start: Point,
     pub amulet_start: Point,
     pub monster_spawns: Vec<Point>,
+    pub theme: Box<dyn MapTheme>,
 }
 
 impl MapBuilder {
