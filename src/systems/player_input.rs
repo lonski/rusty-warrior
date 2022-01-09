@@ -37,6 +37,11 @@ pub fn player_input(
             VirtualKeyCode::Numpad1 => Point::new(-1, 1),
             VirtualKeyCode::Numpad3 => Point::new(1, 1),
 
+            VirtualKeyCode::Down => Point::new(0, 1),
+            VirtualKeyCode::Left => Point::new(-1, 0),
+            VirtualKeyCode::Right => Point::new(1, 0),
+            VirtualKeyCode::Up => Point::new(0, -1),
+
             //pick up item
             VirtualKeyCode::G => {
                 let (player, player_pos) = players
