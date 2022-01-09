@@ -102,7 +102,7 @@ impl State {
             &mut self.ecs,
             &mut self.resources,
             &mut rng,
-            0,
+            map_level as usize,
             &map_builder.monster_spawns,
         );
         self.resources.insert(map_builder.map);
