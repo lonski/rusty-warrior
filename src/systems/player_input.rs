@@ -6,6 +6,7 @@ use crate::prelude::*;
 #[read_component(Enemy)]
 #[read_component(Item)]
 #[read_component(Carried)]
+#[read_component(Weapon)]
 #[write_component(Health)]
 pub fn player_input(
     ecs: &mut SubWorld,
@@ -28,14 +29,14 @@ pub fn player_input(
             VirtualKeyCode::Key9 => use_item(8, ecs, commands),
 
             //movement
-            VirtualKeyCode::Numpad4 => Point::new(-1, 0),
-            VirtualKeyCode::Numpad6 => Point::new(1, 0),
-            VirtualKeyCode::Numpad8 => Point::new(0, -1),
-            VirtualKeyCode::Numpad2 => Point::new(0, 1),
-            VirtualKeyCode::Numpad7 => Point::new(-1, -1),
-            VirtualKeyCode::Numpad9 => Point::new(1, -1),
-            VirtualKeyCode::Numpad1 => Point::new(-1, 1),
-            VirtualKeyCode::Numpad3 => Point::new(1, 1),
+            // VirtualKeyCode::Numpad4 => Point::new(-1, 0),
+            // VirtualKeyCode::Numpad6 => Point::new(1, 0),
+            // VirtualKeyCode::Numpad8 => Point::new(0, -1),
+            // VirtualKeyCode::Numpad2 => Point::new(0, 1),
+            // VirtualKeyCode::Numpad7 => Point::new(-1, -1),
+            // VirtualKeyCode::Numpad9 => Point::new(1, -1),
+            // VirtualKeyCode::Numpad1 => Point::new(-1, 1),
+            // VirtualKeyCode::Numpad3 => Point::new(1, 1),
 
             VirtualKeyCode::Down => Point::new(0, 1),
             VirtualKeyCode::Left => Point::new(-1, 0),
@@ -54,7 +55,18 @@ pub fn player_input(
                     .filter(|(_entity, _item, &item_pos)| item_pos == player_pos)
                     .for_each(|(entity, _item, _item_pos)| {
                         commands.remove_component::<Point>(*entity);
-                        commands.add_component(*entity, Carried(player))
+                        commands.add_component(*entity, Carried(player));
+                        //remove carried weapons if picking up weapon
+                        if let Ok(e) = ecs.entry_ref(*entity) {
+                            if e.get_component::<Weapon>().is_ok() {
+                                <(Entity, &Carried, &Weapon)>::query()
+                                    .iter(ecs)
+                                    .filter(|(_, c, _)| c.0 == player)
+                                    .for_each(|(e, _, _)| {
+                                        commands.remove(*e);
+                                    })
+                            }
+                        }
                     });
                 Point::zero()
             }
